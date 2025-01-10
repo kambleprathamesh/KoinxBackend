@@ -1,3 +1,5 @@
+
+
 const Crypto = require("../model/cryptoSchema");
 const { fetchCryptoData } = require("../services/cryptoServices");
 
@@ -6,21 +8,35 @@ const updateCryptoData = async () => {
 
   try {
     const cryptoData = await fetchCryptoData();
-    console.log(cryptoData);
 
-    // Iterate over the keys of the object using Object.entries()
-    for (const [coinId, coinData] of Object.entries(cryptoData)) {
-      await Crypto.findOneAndUpdate(
-        { symbol: coinId }, // Match by symbol (coinId like 'bitcoin', 'matic-network', etc.)
+    for (const coin of Object.keys(cryptoData)) {
+      const { usd: current_price } = cryptoData[coin];
+      const market_cap = cryptoData[coin].usd_market_cap;
+      const price_change_percentage_24h = cryptoData[coin].usd_24h_change;
+
+      const crypto = await Crypto.findOneAndUpdate(
+        { symbol: coin },
         {
-          name: coinId, // Using coinId as name (optional: you can map it to actual names)
-          current_price: coinData.usd,
-          market_cap: coinData.usd_market_cap,
-          price_change_percentage_24h: coinData.usd_24h_change,
+          name: coin,
+          current_price,
+          market_cap,
+          price_change_percentage_24h,
           last_updated: new Date(),
         },
-        { upsert: true, new: true } // Create if not found, update if found
+        { upsert: true, new: true }
       );
+
+      // Update priceHistory with the current price
+      if (crypto) {
+        crypto.priceHistory.push({ price: current_price });
+
+        // Ensure the history doesn't exceed 100 records
+        if (crypto.priceHistory.length > 100) {
+          crypto.priceHistory.shift(); // Remove the oldest entry
+        }
+
+        await crypto.save();
+      }
     }
 
     console.log("Crypto data updated successfully!");
@@ -28,4 +44,5 @@ const updateCryptoData = async () => {
     console.error("Error updating crypto data:", error);
   }
 };
+
 module.exports = { updateCryptoData };
