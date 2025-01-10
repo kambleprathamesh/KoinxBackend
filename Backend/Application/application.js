@@ -1,5 +1,5 @@
-const connectDB = require("./config/database");
-const { updateCryptoData } = require("./jobs/updateCryptoJobs");
+const connectDB = require("../config/database");
+const { updateCryptoData } = require("../jobs/updateCryptoJobs");
 const cron = require("node-cron");
 
 const startApp = async () => {
