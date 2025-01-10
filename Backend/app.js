@@ -1,27 +1,32 @@
-const connectDB = require("./config/database");
-const { updateCryptoData } = require("./jobs/updateCryptoJobs");
-const cron = require("node-cron");
+const express = require("express");
+const cors = require("cors");
+const startApp = require("./application");
+const cryptoRoutes = require("./routes/cryptoRoutes");
+require("dotenv").config();
+const app = express();
 
-const startApp = async () => {
-  await connectDB(); // Connect to MongoDB
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-  // Run the updateCryptoData function immediately when the app starts
-  updateCryptoData();
-  console.log("Ran updateCrypto Data for the first time");
+app.get("/", (req, res) => {
+  res
+    .status(200)
+    .json({ success: true, message: "Crypto Tracker API is running !" });
+});
 
-  // Get the current time
-  const now = new Date();
+// API Routes
+app.use("/api/v1/crypto", cryptoRoutes);
 
-  // Calculate the next time to run the job (2 hours from now)
-  const nextRunTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+const PORT = process.env.PORT || 5000;
 
-  // Schedule the job to run every 2 hours
-  cron.schedule(
-    `0 ${nextRunTime.getHours()} */2 * * *`, // This expression means every 2 hours
-    updateCryptoData
-  );
-
-  console.log("Crypto Tracker app is running!");
-};
-
-module.exports = startApp;
+startApp()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Error starting the application:", error);
+    process.exit(1);
+  });
