@@ -1,23 +1,25 @@
 const Crypto = require("../model/cryptoSchema");
-const { fetchCryptoData } = require('../services/cryptoServices');
+const { fetchCryptoData } = require("../services/cryptoServices");
 
 const updateCryptoData = async () => {
   console.log("Running updateCryptoData job...");
 
   try {
     const cryptoData = await fetchCryptoData();
+    console.log(cryptoData);
 
-    for (const coin of cryptoData) {
+    // Iterate over the keys of the object using Object.entries()
+    for (const [coinId, coinData] of Object.entries(cryptoData)) {
       await Crypto.findOneAndUpdate(
-        { symbol: coin.symbol }, // Match by symbol
+        { symbol: coinId }, // Match by symbol (coinId like 'bitcoin', 'matic-network', etc.)
         {
-          name: coin.name,
-          current_price: coin.current_price,
-          market_cap: coin.market_cap,
-          price_change_percentage_24h: coin.price_change_percentage_24h,
+          name: coinId, // Using coinId as name (optional: you can map it to actual names)
+          current_price: coinData.usd,
+          market_cap: coinData.usd_market_cap,
+          price_change_percentage_24h: coinData.usd_24h_change,
           last_updated: new Date(),
         },
-        { upsert: true, new: true } // Create if not found
+        { upsert: true, new: true } // Create if not found, update if found
       );
     }
 
@@ -26,5 +28,4 @@ const updateCryptoData = async () => {
     console.error("Error updating crypto data:", error);
   }
 };
-
 module.exports = { updateCryptoData };
