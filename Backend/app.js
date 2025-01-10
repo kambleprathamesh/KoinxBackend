@@ -7,16 +7,17 @@ const startApp = async () => {
 
   // Run the updateCryptoData function immediately when the app starts
   updateCryptoData();
-  console.log("Runned updateCrypto Data for first time");
+  console.log("Ran updateCrypto Data for the first time");
 
   // Get the current time
   const now = new Date();
-  // Calculate the next time to run the job (24 hours from now)
-  const nextRunTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  // Schedule the job to run 24 hours from now, and repeat every 24 hours
+  // Calculate the next time to run the job (2 hours from now)
+  const nextRunTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+  // Schedule the job to run every 2 hours
   cron.schedule(
-    `${nextRunTime.getMinutes()} ${nextRunTime.getHours()} * * *`,
+    `0 ${nextRunTime.getHours()} */2 * * *`, // This expression means every 2 hours
     updateCryptoData
   );
 
